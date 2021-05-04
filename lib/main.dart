@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 void main(){
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: "Simple Interest Calculator App",
       home: SIForm(), // This will be our stateful widget
-    )
+      theme: ThemeData(
+        primaryColor: Colors.indigo,
+        accentColor: Colors.indigo,
+        brightness: Brightness.dark,
+      )
+    ),
   );
 }
 
@@ -25,9 +31,25 @@ class _SIFormState extends State <SIForm>{
   var _currencies = ["Euro", "Dollar", "Pounds", "Others"]; // Variable used in dropdown button
   final _minimunPadding = 5.0;
 
+  var _currentItemSelected = ""; // Default var selected
+
+  @override
+  void initState() {
+    super.initState();
+    _currentItemSelected = _currencies[0];
+  }
+
+  TextEditingController principalController = TextEditingController();
+  TextEditingController roiController = TextEditingController();
+  TextEditingController termController = TextEditingController();
+
+  var displayResult = "";
+
   @override
   Widget build(BuildContext context) {
 
+    // Let's apply some style from context
+    TextStyle textStyle = Theme.of(context).textTheme.headline6;
     return Scaffold(
       //resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -42,9 +64,12 @@ class _SIFormState extends State <SIForm>{
               padding: EdgeInsets.only(top: _minimunPadding, bottom: _minimunPadding),
               child: TextField(
                 keyboardType: TextInputType.number,
+                style: textStyle,
+                controller: principalController,
                 decoration: InputDecoration(
                     labelText: "Principal",
                     hintText: "Enter Principal e.g. 12000",
+                    labelStyle: textStyle,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5.0)
                     )
@@ -55,9 +80,12 @@ class _SIFormState extends State <SIForm>{
               padding: EdgeInsets.only(top: _minimunPadding, bottom: _minimunPadding),
               child:TextField(
                   keyboardType: TextInputType.number,
+                  style: textStyle,
+                  controller: roiController,
                   decoration: InputDecoration(
                       labelText: "Rate of Interest",
                       hintText: "In percent",
+                      labelStyle: textStyle,
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5.0)
                       )
@@ -70,9 +98,12 @@ class _SIFormState extends State <SIForm>{
                 children: <Widget> [
                   Expanded(child:TextField(
                     keyboardType: TextInputType.number,
+                    style: textStyle,
+                    controller: termController,
                     decoration: InputDecoration(
                         labelText: "Term",
                         hintText: "Time in years",
+                        labelStyle: textStyle,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(5.0)
                         )
@@ -87,9 +118,9 @@ class _SIFormState extends State <SIForm>{
                         child: Text(value),
                       );
                     }).toList(),
-                    value: "Euro",
+                    value: _currentItemSelected,
                     onChanged: (String newValueSelected){
-                      //
+                      _onDropDownItemSelected(newValueSelected);
                     },
                   ))
                 ],
@@ -101,16 +132,26 @@ class _SIFormState extends State <SIForm>{
                 children: <Widget>[
                   Expanded(
                     child: RaisedButton(
-                      child: Text("Calculate"),
+                      color: Theme.of(context).accentColor,
+                      textColor: Theme.of(context).primaryColorDark,
+                      child: Text("Calculate", textScaleFactor: 1.5,),
                       onPressed: (){
+                        setState(() {
+                          this.displayResult = _calculateTotalReturns();
+                        });
 
                       },
                     ),
                   ),
                   Expanded(
                     child: RaisedButton(
-                      child: Text("Reset"),
+                      color: Theme.of(context).primaryColorDark,
+                      textColor: Theme.of(context).primaryColorLight,
+                      child: Text("Reset", textScaleFactor: 1.5,),
                       onPressed: (){
+                        setState(() {
+                          _reset();
+                        });
 
                       },
                     ),
@@ -120,7 +161,7 @@ class _SIFormState extends State <SIForm>{
             ),
             Padding(
                 padding: EdgeInsets.only(top: _minimunPadding, bottom: _minimunPadding),
-                child: Text("Todo test")
+                child: Text(this.displayResult, style: textStyle)
             ),
 
           ],
@@ -133,6 +174,31 @@ class _SIFormState extends State <SIForm>{
     AssetImage assetImage =  AssetImage("images/coins.PNG");
     Image image = Image(image: assetImage, width: 125.0, height: 125.0,);
     return Container(child: image, margin: EdgeInsets.all(_minimunPadding * 10),);
+  }
+
+  void _onDropDownItemSelected(String newValueSelected){
+    setState(() {
+      this._currentItemSelected = newValueSelected;
+    });
+  }
+
+  String _calculateTotalReturns() {
+    double principal = double.parse(principalController.text);
+    double roi = double.parse(roiController.text);
+    double term = double.parse(termController.text);
+
+    double totalAmountPayable = principal + (principal*roi*term)/100;
+
+    String result = "After $term years, your investment will be worth $totalAmountPayable $_currentItemSelected";
+    return result;
+  }
+
+  void _reset() {
+    principalController.text = "";
+    roiController.text = "";
+    termController.text = "";
+    displayResult = "";
+    _currentItemSelected = _currencies[0];
   }
   
 }
